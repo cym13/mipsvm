@@ -69,8 +69,6 @@
 typedef uint32_t inst_t;
 typedef void (*action)(inst_t, mem_p);
 
-
-int identify_instruction(inst_t inst);
-void exec_instruction(inst_t inst, mem_p mem);
+int exec_instruction(inst_t inst, mem_p mem);
 
 #endif

@@ -5,7 +5,6 @@
 #include "instructions.h"
 #include "memory.h"
 
-global int RUNNING = 1;
 
 int main(int argc, char *argv[])
 {

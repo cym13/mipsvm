@@ -462,7 +462,7 @@ int sbrk(int amount)
 {
 }
 
-void syscall(mem_p mem)
+int syscall(mem_p mem)
 {
     switch (mem->reg.name.v[0]) {
         case PRINT_INT:
@@ -502,13 +502,17 @@ void syscall(mem_p mem)
             break;
 
         case EXIT:
-            RUNNING = 0;
+            return 0;
+
+        default:
             break;
     }
+    return 1;
 }
 
-void exec_instruction(inst_t inst, mem_p mem)
+int exec_instruction(inst_t inst, mem_p mem)
 {
+    int continue_running = 1;
     action act = NULL;
     switch (identify_instruction(inst)) {
         case ADD:    act = add;    break;
@@ -556,7 +560,7 @@ void exec_instruction(inst_t inst, mem_p mem)
         case XORI:   act = xori;   break;
 
         case SYSCALL:
-           syscall(mem);
+           continue_running = syscall(mem);
            break;
 
         case NOOP:
@@ -564,9 +568,10 @@ void exec_instruction(inst_t inst, mem_p mem)
 
         case ERR:
         default:
-            return;
+            return 1;
     }
     if (act)
         act(inst, mem);
     mem->pc += 4;
+    return continue_running;
 }
