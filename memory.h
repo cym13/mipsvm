@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define STACKMEM 1024    // *4=4Ko
-#define PROGMEM  16384   // *4=64Ko
+#define STACKMEM 1024    // *4=4Kb
+#define PROGMEM  65536   // *1=64Kb
 
 typedef union {
     struct registers {
@@ -30,18 +30,23 @@ typedef union {
     float  f;
 } fl_reg;
 
+typedef union {
+    char     c;
+    uint32_t i;
+} data_t;
+
 struct memory {
     int32_t pc;
     float   hi;
     float   lo;
     fl_reg  fl;
     registers reg;
-    int32_t data[PROGMEM];
+    data_t data[PROGMEM];
     int32_t stack[STACKMEM];
 };
 
 typedef struct memory* mem_p;
 
 mem_p init_memory();
-void  restore_memory(mem_p);
+void restore_memory(mem_p);
 #endif

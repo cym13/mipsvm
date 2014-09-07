@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "instructions.h"
 #include "memory.h"
 
 struct memory* init_memory()
@@ -15,4 +14,8 @@ struct memory* init_memory()
     mem->reg.name.ra   = 0;
 
     return mem;
+}
+
+void restore_memory(mem_p mem) {
+    mem->reg.name.zero = 0;
 }

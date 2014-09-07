@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "instructions.h"
+#include "memory.h"
 
 /*  Instruction splitting (32 bits):
  *
@@ -230,13 +231,12 @@ void jr(inst_t inst, mem_p mem)
     mem->pc = MEM(s) - 4;
 }
 
-// TODO
 void lb(inst_t inst, mem_p mem)
 {
     int s = PART_S(inst);
     int t = PART_T(inst);
     int i = PART_I(inst);
-    MEM(t) = MEM(s+i);
+    MEM(t) = MEM(s+i) & 0x000000ff;
 }
 
 void lui(inst_t inst, mem_p mem)
@@ -246,7 +246,6 @@ void lui(inst_t inst, mem_p mem)
     MEM(t) = i<<16;
 }
 
-// TODO
 void lw(inst_t inst, mem_p mem)
 {
     int s = PART_S(inst);
@@ -413,7 +412,6 @@ void subu(inst_t inst, mem_p mem)
     MEM(d) = (uint32_t)MEM(s) - (uint32_t)MEM(t);
 }
 
-// TODO
 void sw(inst_t inst, mem_p mem)
 {
     int s = PART_S(inst);
@@ -438,30 +436,52 @@ void xori(inst_t inst, mem_p mem)
     MEM(t) = MEM(s) ^ i;
 }
 
-void print_str(int addr)
+void print_str(int addr, mem_p mem)
 {
+    char c;
+    while(c = (MEM(addr++)))
+        printf("%c", c);
 }
 
-int read_int()
+void read_int(mem_p mem)
 {
+    scanf("%i", mem->reg.name.v);
 }
 
-float read_float()
+void read_float(mem_p mem)
 {
+    scanf("%f", (float*)mem->reg.name.v);
 }
 
-double read_double()
+void read_double(mem_p mem)
 {
+    scanf("%lf", (double*)mem->reg.name.v);
 }
 
-void read_string(int addr, int max_len)
+void read_string(int addr, int max_len, mem_p mem)
 {
+    int i;
+    char s[2048];
+    scanf("%s", s);
+
+    for (i=0 ; i<max_len ; i++) {
+        MEM(addr+i) = s[i];
+        if (s[i] == 0)
+            break;
+    }
 }
 
-int sbrk(int amount)
+// TODO
+int sbrk(int amount, mem_p mem)
 {
+    // Not implemented yet because without a running OS, I don't see how one
+    // can allocate memory for processes... There aren't even processes !
+    return -1;
 }
 
+/* Normally thoses would send signals to the OS, but as I don't plan to
+ * implement a full MIPS OS, I'll simulate the syscalls.
+ */
 int syscall(mem_p mem)
 {
     switch (mem->reg.name.v[0]) {
@@ -478,27 +498,27 @@ int syscall(mem_p mem)
             break;
 
         case PRINT_STRING:
-            print_str(mem->reg.name.a[0]);
+            print_str(mem->reg.name.a[0], mem);
             break;
 
         case READ_INT:
-            mem->reg.name.v[0] = read_int();
+            read_int(mem);
             break;
 
         case READ_FLOAT:
-            mem->reg.name.v[0] = read_float();
+            read_float(mem);
             break;
 
         case READ_DOUBLE:
-            mem->reg.name.v[0] = read_double();
+            read_double(mem);
             break;
 
         case READ_STRING:
-            read_string(mem->reg.name.a[0], mem->reg.name.a[1]);
+            read_string(mem->reg.name.a[0], mem->reg.name.a[1], mem);
             break;
 
         case SBRK:
-            mem->reg.name.v[0] = sbrk(mem->reg.name.a[0]);
+            mem->reg.name.v[0] = sbrk(mem->reg.name.a[0], mem);
             break;
 
         case EXIT:
@@ -573,5 +593,6 @@ int exec_instruction(inst_t inst, mem_p mem)
     if (act)
         act(inst, mem);
     mem->pc += 4;
+    restore_memory(mem);
     return continue_running;
 }
